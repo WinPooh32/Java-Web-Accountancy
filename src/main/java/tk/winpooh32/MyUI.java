@@ -25,8 +25,9 @@ public class MyUI extends UI {
     private String currentUser = null;
 
     Navigator navigator;
-    protected static final String VIEW_LOGIN= "login";
-    protected static final String VIEW_MAIN = "main";
+//    protected static final String VIEW_LOGIN= "login";
+//    protected static final String VIEW_MAIN = "main";
+//    protected static final String VIEW_ARRIVAL = "arrival";
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -41,13 +42,14 @@ public class MyUI extends UI {
         DBConnection.connect();
 
         // Create and register the views
-        navigator.addView(VIEW_LOGIN, new ViewLogin(user));
-        navigator.addView(VIEW_MAIN, new ViewNomenclature(user));
+        navigator.addView(Navigation.PAGE_LOGIN, new ViewLogin(user));
+        navigator.addView(Navigation.PAGE_MAIN, new ViewNomenclature(user));
+        navigator.addView(Navigation.PAGE_ARRIVAL, new ViewArrival(user));
 
         //System.out.print(UUID.randomUUID().toString());
 
         if (Page.getCurrent().getUriFragment() == null || Page.getCurrent().getUriFragment().equals("")) {
-            navigator.navigateTo(VIEW_MAIN);
+            navigator.navigateTo(Navigation.PAGE_MAIN);
         }
     }
 

@@ -12,4 +12,5 @@ public final class Navigation {
     //Rotes
     public final static String PAGE_MAIN = "main";
     public final static String PAGE_LOGIN = "login";
+    public final static String PAGE_ARRIVAL = "arrival";
 }

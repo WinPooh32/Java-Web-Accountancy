@@ -7,7 +7,7 @@ import com.vaadin.navigator.View;
 
 public class BarTools extends HorizontalLayout{
     enum Page {
-        Nomenclature, ItemAdding
+        Nomenclature, ItemsArrival
     }
 
     private Page _pageType;
@@ -22,8 +22,8 @@ public class BarTools extends HorizontalLayout{
                 initForNomenclature();
                 break;
 
-            case ItemAdding:
-                initForItemAdding();
+            case ItemsArrival:
+                initItemsArrival();
                 break;
         }
     }
@@ -48,7 +48,9 @@ public class BarTools extends HorizontalLayout{
         addComponents(btnAdd, btnDelete);
     }
 
-    private void initForItemAdding(){
-
+    private void initItemsArrival(){
+        Button btnWrite = new Button("Записать");
+        Button btnWriteWithSuccess = new Button("Провести");
+        addComponents(btnWrite, btnWriteWithSuccess);
     }
 }

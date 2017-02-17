@@ -23,9 +23,12 @@ public class BarHeader extends HorizontalLayout {
         btn_logout.setIcon(VaadinIcons.EXIT_O);
         btn_registers.setIcon(VaadinIcons.CLIPBOARD_PULSE);
 
-        btn_main.setEnabled(false);
+        //btn_main.setEnabled(false);
+
+
 
         btn_main.addClickListener(click -> _user.navigateTo(Navigation.PAGE_MAIN));
+        btn_arrivals.addClickListener(click -> _user.navigateTo(Navigation.PAGE_ARRIVAL));
         btn_logout.addClickListener(click -> _user.logOut());
 
 

@@ -1,29 +1,29 @@
 package tk.winpooh32;
 
 import com.vaadin.data.Validator;
-import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.server.UserError;
 import com.vaadin.ui.*;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
-public class SubWinAddItem  extends Window {
+public class SubWinAddArrivalItem extends Window {
 
-    private TextField shortName;
-    private TextField fullName;
-    private ComboBox categoryCombo;
-    private CheckBox isService;
-    private ComboBox unitsCombo;
+    private ComboBox nomenclatureCombo;
+    private ComboBox countCombo;
     private ComboBox vatCombo;
-    private TextField manufacturer;
-    private TextField code;
+    private TextField cost;
 
-    public SubWinAddItem(){
+    private ViewArrival _parent;
+
+    public SubWinAddArrivalItem(ViewArrival parent){
         super("Добавление нового товара"); // Set window caption
         center();
         setModal(true);
+
+        _parent = parent;
 
         VerticalLayout content = new VerticalLayout();
         content.setMargin(true);
@@ -33,61 +33,35 @@ public class SubWinAddItem  extends Window {
         grid.addStyleName("my-form-grid");
         grid.setSpacing(true);
 
-        //Краткое наименование------------------------------------------------------------------------------------------
-        shortName = new TextField();
-        grid.addComponent(new Label("Краткое наименование"));
-        grid.addComponent(shortName);
+        //Номенклатура-----------------------------------------------------------------------------------------------------
+        nomenclatureCombo = new ComboBox();
+        grid.addComponent(new Label("Номенклатура"));
+        grid.addComponent(nomenclatureCombo);
 
-
-        // Define validation as usual
-        shortName.addValidator(new StringLengthValidator(
-                "Краткое название должно содержать 3-45 символов",
-                3, 45, true));
-        hideValidatorBeforeFocus(shortName);
-
-        shortName.focus();
+        nomenclatureCombo.setNullSelectionAllowed(false);
+        nomenclatureCombo.addItems(generateItemsList());
         //--------------------------------------------------------------------------------------------------------------
 
+        //Количество-------------------------------------------------------------------------------------------------------
+        countCombo = new ComboBox();
+        grid.addComponent(new Label("Количество"));
+        grid.addComponent(countCombo);
 
-        //Полное наименование-------------------------------------------------------------------------------------------
-        fullName = new TextField();
-        grid.addComponent(new Label("Полное наименование"));
-        grid.addComponent(fullName);
-
-        fullName.addValidator(new StringLengthValidator(
-                "Полное название должно содержать 3-200 символов",
-                3, 200, true));
-        hideValidatorBeforeFocus(fullName);
+        countCombo.setNullSelectionAllowed(false);
+        countCombo.addItems(generateCountList(100));
+        countCombo.select("1");
+        countCombo.setNewItemsAllowed(true);
         //--------------------------------------------------------------------------------------------------------------
 
+        //Цена-------------------------------------------------------------------------------------------------
+        cost = new TextField();
+        grid.addComponent(new Label("Цена"));
+        grid.addComponent(cost);
 
-        //Категория-----------------------------------------------------------------------------------------------------
-        categoryCombo = new ComboBox();
-        grid.addComponent(new Label("Категория"));
-        grid.addComponent(categoryCombo);
-
-        categoryCombo.setNullSelectionAllowed(false);
-        categoryCombo.addItems(generateCategoriesList());
+        //cost.addValidator(new FloatRangeValidator(
+        //        "Поле должно содержать вещественное целое число", 0.0f, null));
+        //hideValidatorBeforeFocus(cost);
         //--------------------------------------------------------------------------------------------------------------
-
-
-        //Услуга--------------------------------------------------------------------------------------------------------
-        isService = new CheckBox("Услуга");
-        grid.addComponent(new Label(""));
-        grid.addComponent(isService);
-        //--------------------------------------------------------------------------------------------------------------
-
-
-        //Единица-------------------------------------------------------------------------------------------------------
-        unitsCombo = new ComboBox();
-        grid.addComponent(new Label("Единица"));
-        grid.addComponent(unitsCombo);
-
-        unitsCombo.setNullSelectionAllowed(false);
-        unitsCombo.addItems(generateUnitsList());
-        unitsCombo.select("Шт");
-        //--------------------------------------------------------------------------------------------------------------
-
 
         //НДС-----------------------------------------------------------------------------------------------------------
         vatCombo = new ComboBox();
@@ -100,31 +74,6 @@ public class SubWinAddItem  extends Window {
         //--------------------------------------------------------------------------------------------------------------
 
 
-        //Производитель-------------------------------------------------------------------------------------------------
-        manufacturer = new TextField();
-        grid.addComponent(new Label("Производитель"));
-        grid.addComponent(manufacturer);
-
-        manufacturer.addValidator(new StringLengthValidator(
-                "Поле должно содержать 3-200 символов",
-                3, 200, true));
-        hideValidatorBeforeFocus(manufacturer);
-        //--------------------------------------------------------------------------------------------------------------
-
-
-        //Код-----------------------------------------------------------------------------------------------------------
-        code = new TextField();
-        grid.addComponent(new Label("Код"));
-        grid.addComponent(code);
-
-        code.addValidator(new StringLengthValidator(
-                "Поле должно содержать 1-45 символов",
-                3, 45, true));
-        hideValidatorBeforeFocus(code);
-        //--------------------------------------------------------------------------------------------------------------
-
-
-
         HorizontalLayout btnsLayout = new HorizontalLayout();
         btnsLayout.setSizeFull();
 
@@ -133,7 +82,7 @@ public class SubWinAddItem  extends Window {
         Button btnAddClose = new Button("Добавить и закрыть");
         btnAddClose.addClickListener(clickEvent -> {
             try{
-                validateAndPush();
+                parent.addRow(validateAndCreateRow());
                 close();
             }catch(Validator.InvalidValueException badVal){
                 btnAddClose.setComponentError(new UserError(badVal.getMessage()));
@@ -143,7 +92,7 @@ public class SubWinAddItem  extends Window {
         Button btnAdd = new Button("Добавить");
         btnAdd.addClickListener(clickEvent -> {
             try{
-                validateAndPush();
+                parent.addRow(validateAndCreateRow());
             }catch(Validator.InvalidValueException badVal){
                 btnAdd.setComponentError(new UserError(badVal.getMessage()));
             }
@@ -170,28 +119,27 @@ public class SubWinAddItem  extends Window {
         return arr;
     }
 
-    private ArrayList<String> generateUnitsList(){
+    private ArrayList<String> generateCountList(int size){
         ArrayList<String> arr = new ArrayList();
-        Map<String, Integer> unitsMap = DBConnection.getUnits();
-        Set<Map.Entry<String, Integer>> set = unitsMap.entrySet();
 
-        for (Map.Entry<String, Integer> element : set) {
-            arr.add(element.getKey());
+        for(int i = 0; i <= size; i++){
+            arr.add(Integer.toString(i));
         }
 
         return arr;
     }
 
-    private ArrayList<String> generateCategoriesList(){
+    private ArrayList<String> generateItemsList(){
         ArrayList<String> arr = new ArrayList();
-        Map<String, Integer> categoryMap = DBConnection.getCategories();
-        Set<Map.Entry<String, Integer>> set = categoryMap.entrySet();
 
-        arr.add("");
+        Map<Integer, Vector<String[]>> Table = DBConnection.getItemsData();
+        Set<Map.Entry<Integer, Vector<String[]>>> set = Table.entrySet();
 
-        for (Map.Entry<String, Integer> element : set) {
-            if(!element.getKey().equals("none")){
-                arr.add(element.getKey());
+        for (Map.Entry<Integer, Vector<String[]>> element : set) {
+            Vector<String[]> vec = element.getValue();
+
+            for(String[] row: vec) {
+                arr.add(row[0]);
             }
         }
 
@@ -205,27 +153,27 @@ public class SubWinAddItem  extends Window {
         });
     }
 
-    private void validateAndPush() throws Validator.InvalidValueException{
-        shortName.validate();
-        fullName.validate();
-        manufacturer.validate();
-        code.validate();
+    private String[] validateAndCreateRow() throws Validator.InvalidValueException{
+        //cost.validate();
 
-        Map<String, Integer> unitsMap = DBConnection.getUnits();
-        Map<String, Integer> categoryMap = DBConnection.getCategories();
+        String[] row = new String[8];
 
-        DBConnection.AddItem(new String[]{
-                fullName.getValue(),
-                shortName.getValue(),
-                code.getValue(),
-                (isService.getValue()) ? "1" : "0",
-                vatCombo.getValue().toString().replace("%", ""),
-                ((categoryCombo.getValue() == null || categoryCombo.getValue().equals("")) ? Integer.toString(categoryMap.get("none")) : Integer.toString(categoryMap.get(categoryCombo.getValue()))),
-                manufacturer.getValue(),
-                "0",
-                Integer.toString(unitsMap.get(unitsCombo.getValue()))
-        });
+
+        row[0] = Integer.toString(_parent.getItemsCount() + 1);
+        row[1] = nomenclatureCombo.getValue().toString();
+        row[2] = countCombo.getValue().toString();
+        row[3] = cost.getValue();
+
+        //Sum
+        row[4] = Float.toString(Float.parseFloat(row[3]) * Integer.parseInt(row[2]));
+        //VAT
+        row[5] = vatCombo.getValue().toString().replace("%", "");
+        //VAT value
+        row[6] = Float.toString((Float.parseFloat(row[5]) / 100.0f) * Float.parseFloat(row[4]));
+        //Result sum
+        row[7] = Float.toString(Float.parseFloat(row[4]) + Float.parseFloat(row[6]));
 
         Notification.show("Товар добавлен");
+        return row;
     }
 }

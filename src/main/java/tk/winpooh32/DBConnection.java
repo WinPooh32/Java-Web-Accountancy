@@ -7,6 +7,7 @@ import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
@@ -32,7 +33,7 @@ public final class DBConnection {
                     "com.mysql.jdbc.Driver",
                     "jdbc:mysql://localhost:3306/Accountancy?useUnicode=true&characterEncoding=UTF8&characterSetResults=UTF8",
                     "accountancy",
-                    "159357zxc", 2, 2);
+                    "159357zxc", 10, 10);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -52,7 +53,7 @@ public final class DBConnection {
         return true;
     }
 
-    public static void AddItem(String[] row){
+    public static int AddItem(String[] row){
         //FreeformQuery query = new FreeformQuery( "SELECT * FROM new_table", connectionPool, "ID");
         try {
             Connection conn = connectionPool.reserveConnection();
@@ -60,15 +61,77 @@ public final class DBConnection {
 
             String query_str = "INSERT INTO "
                     + "Items(Name, ShortName, Code, Service, VAT, Category, Manufacturer, Count, UnitsType) "
-                    + String.format("VALUES('%s', '%s','%s','%s','%s','%s','%s','%s','%s')",
-                    row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]);
+                    + String.format("VALUES('%s', '%s','%s','%s','%s','%s','%s','%s','%s');\n"
+                     ,row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]);
 
             //String query_str = "INSERT INTO Items(Name, ShortName, Code, Service, VAT, Category, Manufacturer, Count, UnitsType) VALUES('Пшеница', 'Пшеница','5','0','16','3','Россия','1023','5')";
 
             System.out.println(query_str);
 
-            statement.execute(query_str);
+            statement.executeUpdate(query_str);
+            conn.commit();
 
+            Statement get_id = conn.createStatement();
+            ResultSet rs = get_id.executeQuery("SELECT LAST_INSERT_ID() as LAST;");
+            rs.next();
+            int last_id = rs.getInt("LAST");
+
+            conn.commit();
+
+            conn.close();
+
+            return last_id;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public static int AddDocument(String[] row){
+        try {
+            Connection conn = connectionPool.reserveConnection();
+            Statement statement = conn.createStatement();
+
+            String query_str = "INSERT INTO "
+                    + "Documents(Date, Code, Counterparty, ValutaType, Success) "
+                    + String.format("VALUES('%s', '%s','%s','%s','%s');\n",
+                    row[0], row[1], row[2], row[3], row[4]);
+
+            System.out.println(query_str);
+
+            statement.executeUpdate(query_str);
+            conn.commit();
+
+            Statement get_id = conn.createStatement();
+            ResultSet rs = get_id.executeQuery("SELECT LAST_INSERT_ID() as LAST;");
+            rs.next();
+            int last_id = rs.getInt("LAST");
+
+            conn.commit();
+            conn.close();
+
+            return last_id;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public static void AddDocItem(String[] row){
+        try {
+            Connection conn = connectionPool.reserveConnection();
+            Statement statement = conn.createStatement();
+
+            String query_str = "INSERT INTO "
+                    + "DocsList(Items_id, Count, Cost, Sum, VAT, VAT_value, Sum_result, Document) "
+                    + String.format("VALUES('%s','%s','%s','%s','%s','%s','%s','%s');\n",
+                    row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]);
+
+            System.out.println(query_str);
+
+            statement.executeUpdate(query_str);
             conn.commit();
             conn.close();
 
@@ -125,7 +188,34 @@ public final class DBConnection {
             //Data.add(new String[]{name, code, CategoriesMap.get(category)});
         }
 
+        items = null;
+        categories = null;
+
         return Data;
+    }
+
+    public static Map<String, Integer> getItemsIds(){
+        Map<String,Integer> Ids = new HashMap<>();
+        SQLContainer idsTable = getContainer("Items");
+
+        if(idsTable == null){
+            return null;
+        }
+
+        Collection<?> itemsIDS = idsTable.getItemIds();
+        for (Object itemID : itemsIDS) {
+            Property property = idsTable.getContainerProperty(itemID, "id");
+            int id = Integer.parseInt(property.getValue().toString());
+
+            property = idsTable.getContainerProperty(itemID, "Name");
+            String name = property.getValue().toString();
+
+            Ids.put(name, id);
+        }
+
+        idsTable = null;
+
+        return Ids;
     }
 
     public static Map<String, Integer> getUnits(){
@@ -166,6 +256,24 @@ public final class DBConnection {
         }
 
         return CategoriesMap;
+    }
+
+    public static Map<String, Integer> getCounterparties(){
+        Map<String,Integer> CounterpartiesMap = new HashMap<>();
+        SQLContainer counterparties = getContainer("Counterparties");
+
+        Collection<?> counterpartyIDS = counterparties.getItemIds();
+        for(Object cparty_id : counterpartyIDS){
+            Property property = counterparties.getContainerProperty(cparty_id, "Name");
+            String name = property.getValue().toString();
+
+            property = counterparties.getContainerProperty(cparty_id, "id");
+            int id = Integer.parseInt(property.getValue().toString());
+
+            CounterpartiesMap.put(name, id);
+        }
+
+        return CounterpartiesMap;
     }
 
     private static SQLContainer getContainer(String table){

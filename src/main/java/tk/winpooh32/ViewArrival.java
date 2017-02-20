@@ -7,8 +7,9 @@ import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Page;
 import com.vaadin.ui.*;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
 
 public class ViewArrival extends VerticalLayout implements View {
 
@@ -17,9 +18,10 @@ public class ViewArrival extends VerticalLayout implements View {
     private BarTools _tools;
     private Table _table;
 
+    private ArrayList<String[]> _Rows;
+
     private Label expander;
 
-    private TextField shortName;
     private TextField number;
     private DateField date;
     private ComboBox  counterpartyCombo;
@@ -28,6 +30,7 @@ public class ViewArrival extends VerticalLayout implements View {
         _user = user;
         _header = new BarHeader(_user, "Поступления");
         _tools = new BarTools(this, BarTools.Page.ItemsArrival);
+        _Rows = new ArrayList<>();
 
         expander = new Label("");
 
@@ -35,16 +38,18 @@ public class ViewArrival extends VerticalLayout implements View {
         _table = new Table("Товары/Услуги");
         // Define two columns for the built-in container
 
-        _table.addContainerProperty("N", Integer.class, null);
+        _table.addContainerProperty("N", String.class, null);
         _table.addContainerProperty("Номенклатура", String.class, null);
-        _table.addContainerProperty("Количество", Integer.class, null);
-        _table.addContainerProperty("Цена", DecimalFormat.class, null);
-        _table.addContainerProperty("Сумма", DecimalFormat.class, null);
-        _table.addContainerProperty("НДС%", Integer.class, null);
-        _table.addContainerProperty("НДС", DecimalFormat.class, null);
-        _table.addContainerProperty("Всего", DecimalFormat.class, null);
+        _table.addContainerProperty("Количество", String.class, null);
+        _table.addContainerProperty("Цена", String.class, null);
+        _table.addContainerProperty("Сумма", String.class, null);
+        _table.addContainerProperty("НДС%", String.class, null);
+        _table.addContainerProperty("НДС", String.class, null);
+        _table.addContainerProperty("Всего", String.class, null);
 
-        _table.addItem(new Object[]{"Alpha Centauri", -0.01f}, 4);
+        //DecimalFormat df = new DecimalFormat("###.##");
+
+        fillTable();
 
         // Show exactly the currently contained rows (items)
         _table.setPageLength(_table.size());
@@ -56,7 +61,7 @@ public class ViewArrival extends VerticalLayout implements View {
         VerticalLayout content = new VerticalLayout();
         content.setMargin(true);
 
-        GridLayout grid = new GridLayout(2, 8);
+        GridLayout grid = new GridLayout(2, 3);
         grid.addStyleName("my-form-grid");
         grid.setSpacing(true);
 
@@ -87,8 +92,28 @@ public class ViewArrival extends VerticalLayout implements View {
         counterpartyCombo.addItems(generateCounterpartiesList());
         //--------------------------------------------------------------------------------------------------------------
 
+
+        HorizontalLayout itemActions = new HorizontalLayout();
+        content.setMargin(true);
+        Button btnAddItem = new Button("Добавить");
+        Button btnDelItem = new Button("Удалить");
+        itemActions.addComponents(btnAddItem, btnDelItem);
+
+        btnAddItem.addClickListener(click ->{
+            SubWinAddArrivalItem sub = new SubWinAddArrivalItem(this);
+            UI.getCurrent().addWindow(sub);
+
+            sub.addCloseListener(closeEvent -> {
+                fillTable();
+            });
+        });
+
+        btnDelItem.addClickListener(click ->{
+
+        });
+
         content.addComponent(grid);
-        addComponents(_header, _tools, content, _table);
+        addComponents(_header, _tools, content, itemActions, _table);
 
         setSpacing(true);
 
@@ -105,6 +130,73 @@ public class ViewArrival extends VerticalLayout implements View {
         }
     }
 
+    public void addRow(String[] row){
+        _Rows.add(row);
+    }
+    public int getItemsCount(){return _Rows.size();}
+
+    public void fillTable(){
+        _table.removeAllItems();
+
+        int i = 0;
+        for (String[] row : _Rows) {
+            _table.addItem(row,i);
+            ++i;
+        }
+    }
+
+    public void writeDocument(boolean success){
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(date.getValue());
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        String str_date = (new java.sql.Date(cal.getTimeInMillis())).toString();
+
+        String party_id = Integer.toString(DBConnection.getCounterparties().get(counterpartyCombo.getValue().toString()));
+        String successed = success ? "1" : "0";
+
+        int docId = DBConnection.AddDocument(new String[]{
+                str_date,
+                number.getValue().toString(),
+                party_id,
+                "1",
+                successed
+        });
+
+        pushRows(docId);
+    }
+
+    public void pushRows(int docId){
+        Map<String, Integer> ItemsIds = DBConnection.getItemsIds();
+
+       for(String[] row: _Rows){
+           String[] result_row = new String[8];
+
+           String name = row[1];
+           System.out.println(name);
+
+           result_row[0] = Integer.toString(ItemsIds.get(row[1]));
+           result_row[1] = row[2];
+           result_row[2] = row[3];
+           result_row[3] = row[4];
+           result_row[4] = row[5];
+           result_row[5] = row[6];
+           result_row[6] = row[7];
+           result_row[7] = Integer.toString(docId);
+
+           DBConnection.AddDocItem(result_row);
+       }
+    }
+
+    public void clearAll(){
+        _table.removeAllItems();
+
+        _Rows.clear();
+
+        number.clear();
+        date.clear();
+        counterpartyCombo.clear();
+    }
+
     private void hideValidatorBeforeFocus(TextField field){
         field.setValidationVisible(false);
         field.addBlurListener(fucus -> {
@@ -115,18 +207,12 @@ public class ViewArrival extends VerticalLayout implements View {
 
     private ArrayList<String> generateCounterpartiesList(){
         ArrayList<String> arr = new ArrayList();
-        arr.add("Ололо");
-        arr.add("Проба пера");
-//        Map<String, Integer> categoryMap = DBConnection.getCategories();
-//        Set<Map.Entry<String, Integer>> set = categoryMap.entrySet();
-//
-//        arr.add("");
-//
-//        for (Map.Entry<String, Integer> element : set) {
-//            if(!element.getKey().equals("none")){
-//                arr.add(element.getKey());
-//            }
-//        }
+        Map<String, Integer> categoryMap = DBConnection.getCounterparties();
+        Set<Map.Entry<String, Integer>> set = categoryMap.entrySet();
+
+        for (Map.Entry<String, Integer> element : set) {
+            arr.add(element.getKey());
+        }
         return arr;
     }
 }

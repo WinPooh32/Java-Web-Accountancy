@@ -25,12 +25,11 @@ public class BarHeader extends HorizontalLayout {
 
         //btn_main.setEnabled(false);
 
-
-
         btn_main.addClickListener(click -> _user.navigateTo(Navigation.PAGE_MAIN));
         btn_arrivals.addClickListener(click -> _user.navigateTo(Navigation.PAGE_ARRIVAL));
-        btn_logout.addClickListener(click -> _user.logOut());
+        btn_registers.addClickListener(click -> _user.navigateTo(Navigation.PAGE_REGISTERS));
 
+        btn_logout.addClickListener(click -> _user.logOut());
 
         Label expander = new Label("");
         expander.setSizeFull();

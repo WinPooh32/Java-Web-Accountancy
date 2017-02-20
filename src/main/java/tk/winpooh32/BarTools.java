@@ -7,7 +7,7 @@ import com.vaadin.navigator.View;
 
 public class BarTools extends HorizontalLayout{
     enum Page {
-        Nomenclature, ItemsArrival
+        Nomenclature, ItemsArrival, Registers
     }
 
     private Page _pageType;
@@ -24,6 +24,10 @@ public class BarTools extends HorizontalLayout{
 
             case ItemsArrival:
                 initItemsArrival();
+                break;
+
+            case Registers:
+                initRegisters();
                 break;
         }
     }
@@ -59,5 +63,18 @@ public class BarTools extends HorizontalLayout{
         btnClear.addClickListener(click -> {parent.clearAll();});
 
         addComponents(btnWrite, btnWriteWithSuccess, btnClear);
+    }
+
+    private void initRegisters(){
+//        Button btnWrite = new Button("Записать");
+//        Button btnWriteWithSuccess = new Button("Провести");
+//        Button btnClear = new Button("Очистить");
+//
+//        ViewArrival parent = (ViewArrival) _parentView;
+//        btnWrite.addClickListener(click -> parent.writeDocument(false));
+//        btnWriteWithSuccess.addClickListener(click -> parent.writeDocument(true));
+//        btnClear.addClickListener(click -> {parent.clearAll();});
+
+        addComponents();
     }
 }

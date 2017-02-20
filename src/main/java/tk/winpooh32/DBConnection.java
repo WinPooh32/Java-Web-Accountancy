@@ -10,10 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 public final class DBConnection {
     private static JDBCConnectionPool connectionPool;
@@ -274,6 +271,70 @@ public final class DBConnection {
         }
 
         return CounterpartiesMap;
+    }
+
+    public static Map<Integer, String> getItemsMap(){
+        Map<Integer, String> items = new HashMap<>();
+
+        try {
+            Connection conn = connectionPool.reserveConnection();
+            Statement statement = conn.createStatement();
+
+            String query_str = "SELECT id, Name FROM Items";
+
+            System.out.println(query_str);
+
+            ResultSet resultset = statement.executeQuery(query_str);
+
+            while (resultset.next()) {
+                items.put(resultset.getInt(1), resultset.getString(2));
+            }
+
+            conn.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return items;
+    }
+
+    public static ArrayList<String[]> getRegisters(){
+        ArrayList<String[]> arr = new ArrayList<>();
+
+        try {
+            Connection conn = connectionPool.reserveConnection();
+            Statement statement = conn.createStatement();
+
+            String query_str = "SELECT Items_id, Count, Sum_result, Code, Date, Counterparty, Cost\n"
+                + "FROM (\n"
+                + "        (SELECT Document as doc_id, Items_id, Count, Cost, Sum_result FROM DocsList) AS Items\n"
+                + "JOIN\n"
+                + "(SELECT id, Date, Counterparty, Code, Success FROM Documents) AS Docs\n"
+                + "ON Items.doc_id = Docs.id AND Docs.Success > 0\n"
+                + ");";
+
+            System.out.println(query_str);
+
+            ResultSet resultset = statement.executeQuery(query_str);
+
+            while (resultset.next()) {
+                String[] row = new String[7];
+
+                int i = 1;
+                while(i <= 7) {
+                    row[i-1] = (resultset.getString(i++));
+                }
+
+                arr.add(row);
+            }
+            conn.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return arr;
     }
 
     private static SQLContainer getContainer(String table){

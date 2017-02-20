@@ -45,8 +45,7 @@ public class MyUI extends UI {
         navigator.addView(Navigation.PAGE_LOGIN, new ViewLogin(user));
         navigator.addView(Navigation.PAGE_MAIN, new ViewNomenclature(user));
         navigator.addView(Navigation.PAGE_ARRIVAL, new ViewArrival(user));
-
-        //System.out.print(UUID.randomUUID().toString());
+        navigator.addView(Navigation.PAGE_REGISTERS, new ViewRegisterTables(user));
 
         if (Page.getCurrent().getUriFragment() == null || Page.getCurrent().getUriFragment().equals("")) {
             navigator.navigateTo(Navigation.PAGE_MAIN);

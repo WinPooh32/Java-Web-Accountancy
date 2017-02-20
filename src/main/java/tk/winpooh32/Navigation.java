@@ -13,4 +13,5 @@ public final class Navigation {
     public final static String PAGE_MAIN = "main";
     public final static String PAGE_LOGIN = "login";
     public final static String PAGE_ARRIVAL = "arrival";
+    public final static String PAGE_REGISTERS = "registers";
 }

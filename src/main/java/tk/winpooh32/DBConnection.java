@@ -30,7 +30,7 @@ public final class DBConnection {
                     "com.mysql.jdbc.Driver",
                     "jdbc:mysql://localhost:3306/Accountancy?useUnicode=true&characterEncoding=UTF8&characterSetResults=UTF8",
                     "accountancy",
-                    "159357zxc", 10, 10);
+                    "159357zxc", 20, 20);
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -51,6 +51,13 @@ public class BarTools extends HorizontalLayout{
     private void initItemsArrival(){
         Button btnWrite = new Button("Записать");
         Button btnWriteWithSuccess = new Button("Провести");
-        addComponents(btnWrite, btnWriteWithSuccess);
+        Button btnClear = new Button("Очистить");
+
+        ViewArrival parent = (ViewArrival) _parentView;
+        btnWrite.addClickListener(click -> parent.writeDocument(false));
+        btnWriteWithSuccess.addClickListener(click -> parent.writeDocument(true));
+        btnClear.addClickListener(click -> {parent.clearAll();});
+
+        addComponents(btnWrite, btnWriteWithSuccess, btnClear);
     }
 }
